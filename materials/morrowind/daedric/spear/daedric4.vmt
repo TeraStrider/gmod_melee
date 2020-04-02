@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "morrowind/daedric/spear/daedric4"
+	"$surfaceprop" "metal"
+}

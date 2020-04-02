@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "morrowind/steel/halberd/steel3"
+	"$surfaceprop" "metal"
+}

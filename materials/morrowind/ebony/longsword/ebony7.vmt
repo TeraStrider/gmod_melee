@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "morrowind/ebony/longsword/ebony7"
+	"$surfaceprop" "metal"
+}

@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "morrowind/chitin/shortsword/chitin5"
+	"$surfaceprop" "metal"
+}

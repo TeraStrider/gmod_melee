@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "morrowind/iron/knife/ironknife2"
+	"$surfaceprop" "metal"
+}

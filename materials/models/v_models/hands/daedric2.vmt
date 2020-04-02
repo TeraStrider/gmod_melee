@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "models/v_models/hands/daedric2"
+	"$surfaceprop" "metal"
+}

@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "morrowind/dwemer/longspear/dwemer3"
+	"$surfaceprop" "metal"
+}

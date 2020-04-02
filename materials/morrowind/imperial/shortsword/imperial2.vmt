@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "morrowind/imperial/shortsword/imperial2"
+	"$surfaceprop" "metal"
+}

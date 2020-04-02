@@ -5,7 +5,7 @@ CreateConVar("sv_pickup_max_weight", 32, FCVAR_LUA_SERVER + FCVAR_REPLICATED, "S
 CreateConVar("sv_pickup_max_volume", 1024, FCVAR_LUA_SERVER + FCVAR_REPLICATED, "Set max prop volume",0)
 CreateConVar("sv_pickup_max_aabb", -1, FCVAR_LUA_SERVER + FCVAR_REPLICATED, "Set max prop volume")
 CreateConVar("sv_pickup_max_radius", -1, FCVAR_LUA_SERVER + FCVAR_REPLICATED, "Set max prop volume",0)
-CreateConVar("sv_pickup_allow", 1, FCVAR_LUA_SERVER + FCVAR_REPLICATED, "Allow players to pickup props and weaponize them?")
+CreateConVar("sv_pickup_allow", 0, FCVAR_LUA_SERVER + FCVAR_REPLICATED, "Allow players to pickup props and weaponize them?")
 CreateConVar("sv_pickup_allow_props", 1, FCVAR_LUA_SERVER + FCVAR_REPLICATED, "Allow players to pickup props and weaponize them?")
 CreateConVar("sv_pickup_allow_npcs", 0, FCVAR_LUA_SERVER + FCVAR_REPLICATED, "Allow players to pickup props and weaponize them?")
 CreateConVar("sv_pickup_allow_entities", 0, FCVAR_LUA_SERVER + FCVAR_REPLICATED, "Allow players to pickup props and weaponize them?")
@@ -157,6 +157,6 @@ hook.Add( "KeyPress", "MeleePickupProp", function( ply, key )
 end )
 
 
-list.Set( "PlayerOptionsModel", "m_anm", "models/m_anm.mdl" )
-player_manager.AddValidModel( "m_anm", "models/m_anm.mdl" )
-player_manager.AddValidHands( "m_anm", "models/weapons/c_arms.mdl", 0, "0" )
+-- list.Set( "PlayerOptionsModel", "m_anm", "models/m_anm.mdl" )
+-- player_manager.AddValidModel( "m_anm", "models/m_anm.mdl" )
+-- player_manager.AddValidHands( "m_anm", "models/weapons/c_arms.mdl", 0, "0" )
