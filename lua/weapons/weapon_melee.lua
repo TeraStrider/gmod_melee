@@ -5,7 +5,7 @@ SWEP.PrintName = "WeaponMelee"
 SWEP.Slot = 0
 SWEP.SlotPos = 4
 SWEP.Spawnable = false
-SWEP.ViewModel = "models/weapons/c_generic_188.mdl"
+SWEP.ViewModel = "models/weapons/c_generic_186.mdl"
 
 SWEP.DrawAmmo = false
 
@@ -69,9 +69,9 @@ function SWEP:PostDrawViewModel( vm, weapon, ply )
 	local handle = vm
 	local model = ClientsideModel(self.WorldModel)
 	local bone = handle:LookupBone( "ValveBiped.Bip01_R_Hand" )
-	--[[local angpos = handle:GetAttachment( bone )
-	local ang = angpos.Ang
-	local pos = angpos.Pos--]]
+	-- local angpos = handle:GetAttachment( bone )
+	-- local ang = angpos.Ang
+	-- local pos = angpos.Pos
 	local matrix = handle:GetBoneMatrix( bone )
 	local ang = matrix:GetAngles()
 	local pos = matrix:GetTranslation()
