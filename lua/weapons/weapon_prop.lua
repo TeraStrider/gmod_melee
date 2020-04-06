@@ -11,6 +11,7 @@ SWEP.MissSound = "WeaponFrag.Throw"
 SWEP.DrawWeaponInfoBox = true
 SWEP.UseHands = true
 SWEP.HoldType = "melee2"
+SWEP.Weight = 20
 SWEP.Attack = {
 	First = {
 		Force = Vector(0,-0.707107,0.707107),

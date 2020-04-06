@@ -5,7 +5,7 @@ SWEP.PrintName = "WeaponMelee"
 SWEP.Slot = 0
 SWEP.SlotPos = 4
 SWEP.Spawnable = false
-SWEP.ViewModel = "models/weapons/c_generic_186.mdl"
+SWEP.ViewModel = "models/weapons/c_generic_187.mdl"
 
 SWEP.DrawAmmo = false
 

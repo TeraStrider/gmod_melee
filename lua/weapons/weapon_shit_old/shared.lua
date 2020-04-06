@@ -145,14 +145,14 @@ function SWEP:DrawHUD()
 	if (self.Owner:KeyDown(IN_ATTACK2)) then
 		radius = self:GetCurRadius()
 	end
-	if GetConVarNumber( "developer" ) >= 1 then
+	-- if GetConVarNumber( "developer" ) >= 1 then
 		
 		surface.DrawCircle( ScrW() / 2, ScrH() / 2, (radius+radius)*7.7, self.CrosshairColor )
 		surface.DrawCircle( ScrW() / 2 -  self:GetCurOffsetAim().y*15.4, ScrH()/2 + self:GetCurOffsetAim().p*15.4, 1, self.CrosshairColor )
 		surface.DrawCircle( ScrW() / 2 +  (360 - self:GetCurOffsetAim().y)*15.4, ScrH()/2 + self:GetCurOffsetAim().p*15.4, 1, self.CrosshairColor )	
 		surface.DrawCircle( ScrW() / 2 -  self:GetCurOffsetAim().y*15.4, ScrH()/2 - (360 - self:GetCurOffsetAim().p)*15.4, 1, self.CrosshairColor )
 		surface.DrawCircle( ScrW() / 2 +  (360 - self:GetCurOffsetAim().y)*15.4, ScrH()/2 - (360 - self:GetCurOffsetAim().p)*15.4, 1, self.CrosshairColor )
-	end
+	-- end
 end
 
 function SWEP:Reload()

@@ -9,10 +9,7 @@ SWEP.SlotPos = 4
 
 SWEP.Spawnable = true
 
-SWEP.ViewModel = "models/weapons/c_crowbar_empty.mdl" 
-SWEP.ViewModel1 = "models/dizcordum/skyrim/weapons/twohanded_dragonbone_sword.mdl" 
-SWEP.WorldModel = "models/dizcordum/skyrim/weapons/twohanded_dragonbone_sword.mdl"
-SWEP.ViewModelFOV = 60
+SWEP.ViewModel = "models/weapons/v_models/v_cweaponry_pmg.mdl" 
 SWEP.UseHands = true
 
 SWEP.Primary.ClipSize = -1
@@ -27,147 +24,101 @@ SWEP.Secondary.Ammo = "none"
 SWEP.ViewModelAngle	=	Angle(180,0,90)
 SWEP.ViewModelPos	=	Vector(0, 0, 0)
 SWEP.DrawAmmo = false
+SWEP.FreeAimRange = 10
+SWEP.FreeAimSensivity = 0.15
+SWEP.DrawCrosshair = true
 
-SWEP.HitDistance = 48
-
-local SwingSound = Sound( "WeaponFrag.Throw" )
-local HitSound = Sound( "Flesh.ImpactHard" )
-local csmodel = nil
-local pos_glob = Vector()
-local ang_glob = Angle()
 function SWEP:Initialize()
-	self:SetHoldType( "melee" )
+	self:SetHoldType( "pistol" )
+	self:SetFreeAim(Angle())
 end
 
-function SWEP:GetViewModelPosition()
-	return pos_glob, ang_glob
+function SWEP:CalcView( ply, pos, ang, fov )
+	self.ViewModelFOV	= fov
+	return pos, ang, fov
 end
-
-function SWEP:PreDrawViewModel( vm, ply, weapon ) 
-
+function SWEP:GetViewModelPosition(pos, ang)
+	local freeaim = self:GetFreeAim()
+	ang:RotateAroundAxis( ang:Up(), freeaim.y )
+	ang:RotateAroundAxis( ang:Right(), -freeaim.p )
+	return pos, ang
 end
-function SWEP:SetupDataTables()
+-- function SWEP:GetViewModelPosition()
+-- 	return pos_glob, ang_glob
+-- end
 
-	self:NetworkVar( "Float", 0, "NextMeleeAttack" )
-	self:NetworkVar( "Float", 1, "NextIdle" )
-	self:NetworkVar( "Int", 2, "Combo" )
+-- function SWEP:PreDrawViewModel( vm, ply, weapon ) 
 
-end
-
-function SWEP:UpdateNextIdle()
-
-	local vm = self.Owner:GetViewModel()
-	self:SetNextIdle( CurTime() + vm:SequenceDuration() / vm:GetPlaybackRate() )
-
-end
-
-function SWEP:PrimaryAttack( right )
-
-	self.Owner:SetAnimation( PLAYER_ATTACK1 )
-
-	local anim = "hitcenter3"
-	if ( right ) then anim = "hitcenter1" end
-	if ( self:GetCombo() >= 2 ) then
-		anim = "hitkill1"
+-- end
+function SWEP:Tick()
+	-- print(FrameTime())
+	-- print(engine.TickInterval())
+	local cmd = self.Owner:GetCurrentCommand()
+	local x, y = cmd:GetMouseX() * engine.TickInterval() * self.FreeAimSensivity, cmd:GetMouseY() * engine.TickInterval() * self.FreeAimSensivity
+	if ( x ~= 0 or y ~= 0 ) then
+		local a = util_NormalizeAngles( self:GetFreeAim() ) + Angle( y * self.FreeAimRange, x * -self.FreeAimRange, 0 )
+		
+		util_Clamp( a )
+		self:SetFreeAim(a)
 	end
+end
 
-	local vm = self.Owner:GetViewModel(0)
-	vm:SendViewModelMatchingSequence( vm:LookupSequence( anim ) )
+function SWEP:SetupDataTables()
+	self:NetworkVar( "Angle", 0, "FreeAim" )
+end
 
-	self:EmitSound( SwingSound )
+	
+function SWEP:ShootBullet( damage, num_bullets, aimcone )
+ 	local freeaim = self:GetFreeAim()
+ 	local ang = self.Owner:EyeAngles()
+ 	ang:RotateAroundAxis( ang:Up(), freeaim.y )
+	ang:RotateAroundAxis( ang:Right(), -freeaim.p )
+	local bullet = {}
+	bullet.Num 		= num_bullets
+	bullet.Src 		= self.Owner:GetShootPos()	// Source
+	bullet.Dir 		= ang:Forward()// Dir of bullet
+	bullet.Spread 	= Vector( aimcone, aimcone, 0 )		// Aim Cone
+	bullet.Tracer	= 1	// Show a tracer on every x bullets 
+    bullet.TracerName = "AR2Tracer" // what Tracer Effect should be used
+	bullet.Force	= 1	// Amount of force to give to phys objects
+	bullet.Damage	= damage
+	bullet.DamageType	= DMG_DISSOLVE
+	bullet.AmmoType = "Pistol"
+ 
+	self.Owner:FireBullets( bullet )
+ 
+	self:ShootEffects()
+ 
+end
 
-	self:UpdateNextIdle()
-	self:SetNextMeleeAttack( CurTime() + 0.2 )
-
-	self:SetNextPrimaryFire( CurTime() + 0.9 )
-	self:SetNextSecondaryFire( CurTime() + 0.9 )
+function SWEP:PrimaryAttack()
+	local vm = self.Owner:GetViewModel()
+	self:ShootBullet(50,1,0.02)
+		local x, y, z = 0, -0.1, math.Rand(-5, 5)
+		local a = util_NormalizeAngles( self:GetFreeAim() ) + Angle( y * self.FreeAimRange, x * -self.FreeAimRange, 0 )	
+		util_Clamp( a )
+		self:SetFreeAim(a)
+	-- if IsFirstTimePredicted() then self.Owner:ViewPunch(Angle(x , y, z)) end
+	if CLIENT and IsFirstTimePredicted() then self.Owner:SetEyeAngles(self.Owner:EyeAngles() + Angle(y * 10 , x * 10, 0)) end
+	self:EmitSound("PSR_FIRE")
+	vm:SendViewModelMatchingSequence( vm:LookupSequence( "fire3" ))
+	self.Owner:SetAnimation( PLAYER_ATTACK1 )
+	self:SetNextPrimaryFire(CurTime() + 0.05)
+	self:SetNextSecondaryFire(CurTime() + 0.01)
 
 end
 
 function SWEP:SecondaryAttack()
 
-	self:PrimaryAttack( true )
+	self:PrimaryAttack()
 
 end
 
-function SWEP:DealDamage()
-
-	local anim = self:GetSequenceName(self.Owner:GetViewModel():GetSequence())
-
-	self.Owner:LagCompensation( true )
-
-	local tr = util.TraceLine( {
-		start = self.Owner:GetShootPos(),
-		endpos = self.Owner:GetShootPos() + self.Owner:GetAimVector() * self.HitDistance,
-		filter = self.Owner,
-		mask = MASK_SHOT_HULL
-	} )
-
-	if ( !IsValid( tr.Entity ) ) then
-		tr = util.TraceHull( {
-			start = self.Owner:GetShootPos(),
-			endpos = self.Owner:GetShootPos() + self.Owner:GetAimVector() * self.HitDistance,
-			filter = self.Owner,
-			mins = Vector( -10, -10, -8 ),
-			maxs = Vector( 10, 10, 8 ),
-			mask = MASK_SHOT_HULL
-		} )
-	end
-
-	-- We need the second part for single player because SWEP:Think is ran shared in SP
-	if ( tr.Hit && !( game.SinglePlayer() && CLIENT ) ) then
-		self:EmitSound( HitSound )
-	end
-
-	local hit = false
-
-	if ( SERVER && IsValid( tr.Entity ) && ( tr.Entity:IsNPC() || tr.Entity:IsPlayer() || tr.Entity:Health() > 0 ) ) then
-		local dmginfo = DamageInfo()
-
-		local attacker = self.Owner
-		if ( !IsValid( attacker ) ) then attacker = self end
-		dmginfo:SetAttacker( attacker )
-
-		dmginfo:SetInflictor( self )
-		dmginfo:SetDamage( math.random( 20, 45 ) )
-
-		if ( anim == "hitcenter3" ) then
-			dmginfo:SetDamageForce( self.Owner:GetRight() * 4912 + self.Owner:GetForward() * 9998 ) -- Yes we need those specific numbers
-		elseif ( anim == "hitcenter1" ) then
-			dmginfo:SetDamageForce( self.Owner:GetRight() * -4912 + self.Owner:GetForward() * 9989 )
-		elseif ( anim == "hitkill1" ) then
-			dmginfo:SetDamageForce( self.Owner:GetUp() * 5158 + self.Owner:GetForward() * 10012 )
-			dmginfo:SetDamage( math.random( 12, 24 ) )
-		end
-
-		tr.Entity:TakeDamageInfo( dmginfo )
-		hit = true
-
-	end
-
-	if ( SERVER && IsValid( tr.Entity ) ) then
-		local phys = tr.Entity:GetPhysicsObject()
-		if ( IsValid( phys ) ) then
-			phys:ApplyForceOffset( self.Owner:GetAimVector() * 80 * phys:GetMass(), tr.HitPos )
-		end
-	end
-
-	if ( SERVER ) then
-		if ( hit && anim != "fists_uppercut" ) then
-			self:SetCombo( self:GetCombo() + 1 )
-		else
-			self:SetCombo( 0 )
-		end
-	end
-
-	self.Owner:LagCompensation( false )
-
+function SWEP:CalcView(ply, pos, ang, fov)
+	return pos, ang
 end
 
 function SWEP:Holster()
-	if ( IsValid( self.Owner:GetViewModel( 1 ) ) ) then
-		self.Owner:GetViewModel( 1 ):SetWeaponModel( self.ViewModel1 , nil)
-	end
 	return true
 end
 
@@ -179,55 +130,21 @@ end
 
 function SWEP:Deploy()
 
-	local speed = GetConVarNumber( "sv_defaultdeployspeed" )
-	if ( IsValid( self.Owner:GetViewModel( 1 ) ) ) then
-		self.Owner:GetViewModel( 0 ):SetWeaponModel( self.ViewModel , self )
-		self.Owner:GetViewModel( 1 ):SetWeaponModel( self.ViewModel1 , self )
-	end
-	local vm = self.Owner:GetViewModel(0)
-	vm:SendViewModelMatchingSequence( vm:LookupSequence( "draw" ) )
-	vm:SetPlaybackRate( speed )
-
-	self:SetNextPrimaryFire( CurTime() + vm:SequenceDuration() / speed )
-	self:SetNextSecondaryFire( CurTime() + vm:SequenceDuration() / speed )
-	self:UpdateNextIdle()
-
-	if ( SERVER ) then
-		self:SetCombo( 0 )
-	end
-
 	return true
 
 end
 
 function SWEP:Think()
 
-	local vm = self.Owner:GetViewModel(0)
-	local curtime = CurTime()
-	local idletime = self:GetNextIdle()
+end
 
-	if ( idletime > 0 && CurTime() > idletime ) then
+function SWEP:DoImpactEffect( tr, nDamageType )
+	if (!IsFirstTimePredicted()) then return end
+	if ( tr.HitSky ) then return end
 
-		vm:SendViewModelMatchingSequence( vm:LookupSequence( "idle01" ))
-
-		self:UpdateNextIdle()
-
-	end
-
-	local meleetime = self:GetNextMeleeAttack()
-
-	if ( meleetime > 0 && CurTime() > meleetime ) then
-
-		self:DealDamage()
-
-		self:SetNextMeleeAttack( 0 )
-
-	end
-
-	if ( SERVER && CurTime() > self:GetNextPrimaryFire() + 0.1 ) then
-
-		self:SetCombo( 0 )
-
-	end
-
+	local effectdata = EffectData()
+	effectdata:SetOrigin( tr.HitPos + tr.HitNormal )
+	effectdata:SetNormal( tr.HitNormal )
+	util.Effect( "AR2Impact", effectdata )
+	
 end
