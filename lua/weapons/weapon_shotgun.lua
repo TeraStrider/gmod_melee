@@ -1,22 +1,22 @@
 
 AddCSLuaFile()
 
-SWEP.PrintName = "#Sward"
-SWEP.Purpose = "Well we sure as hell didn't use guns! We would just wrestle Hunters to the ground with our bare hands! I used to kill ten, twenty a day, just using my fists."
+SWEP.PrintName = "Pulse Shotgun"
+SWEP.Purpose = "Shotgun"
 
 SWEP.Slot = 0
 SWEP.SlotPos = 4
 
 SWEP.Spawnable = true
 
-SWEP.ViewModel = "models/weapons/v_models/v_cweaponry_pmg.mdl" 
+SWEP.ViewModel = "models/weapons/v_models/v_cweaponry_shotgun.mdl" 
 SWEP.UseHands = true
 
 SWEP.Primary.ClipSize = 250
 SWEP.Primary.DefaultClip = 250
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "ar2"
-SWEP.ViewModelFOV =68
+SWEP.ViewModelFOV = 68
 SWEP.Secondary.ClipSize = -1
 SWEP.Secondary.DefaultClip = -1
 SWEP.Secondary.Automatic = true
@@ -28,11 +28,11 @@ SWEP.FreeAimRange = 10
 SWEP.FreeAimSensivity = 0.15
 SWEP.DrawCrosshair = false
 SWEP.ReloadTime = 2.4
-SWEP.ShootPos = Vector(5, -9, 0)
+SWEP.ShootPos = Vector(4, -1, 0)
 function SWEP:Initialize()
 	self:SetHoldType( "pistol" )
 	self:SetFreeAim(Angle())
-	self:SetNextReload(0)
+	self:SetNextReload(CurTime())
 end
 
 function SWEP:CalcView( ply, pos, ang, fov )
@@ -41,6 +41,7 @@ function SWEP:CalcView( ply, pos, ang, fov )
 end
 function SWEP:GetViewModelPosition(pos, ang)
 	local freeaim = self:GetFreeAim()
+	local ang = self.Owner:EyeAngles()
 	ang:RotateAroundAxis( ang:Up(), freeaim.y )
 	ang:RotateAroundAxis( ang:Right(), -freeaim.p )
 
@@ -96,31 +97,32 @@ function SWEP:ShootBullet( damage, num_bullets, aimcone )
 	-- self:ShootEffects()
  
 end
-
-function SWEP:PrimaryAttack()
-	local vm = self.Owner:GetViewModel()
-	self:ShootBullet(35,1,0.03)
-		local x, y, z = 0, -0.1, math.Rand(-5, 5)
-		local a = util_NormalizeAngles( self:GetFreeAim() ) + Angle( y * self.FreeAimRange, x * -self.FreeAimRange, 0 )	
-		util_Clamp( a )
-		self:SetFreeAim(a)
-	-- if IsFirstTimePredicted() then self.Owner:ViewPunch(Angle(x , y, z)) end
-	if --[[CLIENT and--]] IsFirstTimePredicted() then self.Owner:SetEyeAngles(self.Owner:EyeAngles() + Angle(y * 10 , x * 10, 0)) end
-	self:EmitSound("PSR_FIRE")
-	vm:SendViewModelMatchingSequence( vm:LookupSequence( "fire3" ))
-	self.Owner:SetAnimation( PLAYER_ATTACK1 )
-	self:SetNextPrimaryFire(CurTime() + 0.05)
-
-end
-
 function SWEP:Reload()
 	if (CurTime() < self:GetNextReload()) then return end
 	local vm = self.Owner:GetViewModel()
-	vm:SendViewModelMatchingSequence( vm:LookupSequence( "reload" ))
-	self:SetNextReload(CurTime() + self.ReloadTime)
-	self:SetNextPrimaryFire(CurTime() + self.ReloadTime)
-	self:SetNextSecondaryFire(CurTime() + self.ReloadTime)
+	vm:SendViewModelMatchingSequence( vm:LookupSequence( "pump" ))
+	self:EmitSound("Cweaponry_PUMP1")
+	self:SetNextReload(CurTime() + vm:SequenceDuration())
+	self:SetNextPrimaryFire(CurTime() + vm:SequenceDuration())
+	self:SetNextSecondaryFire(CurTime() + vm:SequenceDuration())
 end
+
+function SWEP:PrimaryAttack()
+	self:ShootBullet(12,8,0.05)
+	local vm = self.Owner:GetViewModel()
+	local x, y, z = 0, -0.1, math.Rand(-0.6, 0.6)
+	local a = util_NormalizeAngles( self:GetFreeAim() ) + Angle( y * self.FreeAimRange, x * -self.FreeAimRange, 0 )	
+	util_Clamp( a )
+	self:SetFreeAim(a)
+	if IsFirstTimePredicted() then self.Owner:ViewPunch(Angle(x , y, z)) end
+	if --[[CLIENT and--]] IsFirstTimePredicted() then self.Owner:SetEyeAngles(self.Owner:EyeAngles() + Angle(y * 10 , x * 10, 0)) end
+	self:EmitSound("PSHOTGUN_FIRE")
+	vm:SendViewModelMatchingSequence( vm:LookupSequence( "fire01" ))
+	self.Owner:SetAnimation( PLAYER_ATTACK1 )
+	self:SetNextPrimaryFire(CurTime() + 0.2)
+
+end
+
 
 function SWEP:SecondaryAttack()
 
@@ -136,11 +138,15 @@ function SWEP:SecondaryAttack()
 	ent:SetAngles( ang )
 	ent:SetOwner(self.Owner)
 	ent:Spawn()
-	ent:SetSaveValue("m_flRadius",12)
+	ent:SetSaveValue("m_flRadius", GetConVar( "sk_weapon_ar2_alt_fire_radius" ):GetFloat())
 	ent:SetSaveValue("m_nState",3)
-	ent:SetSaveValue("m_nMaxBounces",3)
+	ent:SetSaveValue("m_nMaxBounces", GetConVar( "sk_weapon_ar2_alt_fire_duration" ):GetInt())
+	ent:Activate()
 	local phys = ent:GetPhysicsObject()
-	phys:SetVelocity(ang:Forward() * 3500)
+	phys:SetVelocity(ang:Forward() * 1000)
+	local x, y, z =  math.Rand(-2, 2), math.Rand(-2, 2), math.Rand(-1, 1)
+	if IsFirstTimePredicted() then self.Owner:ViewPunch(Angle(x , y, z)) end
+	if --[[CLIENT and--]] IsFirstTimePredicted() then self.Owner:SetEyeAngles(self.Owner:EyeAngles() + Angle(y, x, 0)) end
 	local vm = self.Owner:GetViewModel()
 	vm:SendViewModelMatchingSequence( vm:LookupSequence( "fire3" ))
 	self:EmitSound("ALT_FIRE2")
@@ -158,12 +164,13 @@ function SWEP:OnDrop()
 end
 
 function SWEP:Deploy()
-
+	local vm = self.Owner:GetViewModel()
+	vm:SendViewModelMatchingSequence( vm:LookupSequence( "draw" ))
 	return true
 
 end
 function SWEP:DoImpactEffect( tr, nDamageType )
-	if (!IsFirstTimePredicted()) then return end
+	-- if (!IsFirstTimePredicted()) then return end
 	if ( tr.HitSky ) then return end
 
 	local effectdata = EffectData()

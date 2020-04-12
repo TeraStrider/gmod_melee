@@ -92,7 +92,6 @@ hook.Add( "KeyPress", "MeleePickupProp", function( ply, key )
 		local hiteffect
 		local hitcolor
 		local damage = 0
-		PrintTable(util.GetModelInfo(tr.Entity:GetModel()))
 		if (IsValid(phys)) then
 			if (surface) then
 
