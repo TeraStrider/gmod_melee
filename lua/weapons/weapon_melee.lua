@@ -31,15 +31,37 @@ SWEP.NextUse 					= 0
 -- SWEP.Collateral					= 3
 SWEP.Mins 						= Vector(-5,-5,-5)
 SWEP.Maxs						= Vector(5,5,5)
+SWEP.FreeAimRange = 5
+SWEP.FreeAimSensivity = 2
 
 function SWEP:Initialize()
 	self:SetHoldType( "melee" )
 	self:SetCanPrimaryAttack(true)
 	self:SetIsCharging(false)
 	self:SetIsAttacking(false)
+	self:SetFreeAim(Angle())
+	self:SetRecoilAngle(Angle())
 end
+
+function SWEP:Tick()
+	local cmd = self.Owner:GetCurrentCommand()
+	local x, y = cmd:GetMouseX() * engine.TickInterval() * self.FreeAimSensivity, cmd:GetMouseY() * engine.TickInterval() * self.FreeAimSensivity
+	if ( x != 0 or y != 0) then
+		local freeaim = self:GetFreeAim()
+		freeaim:Normalize()
+		freeaim.p = math.Clamp(freeaim.p + y, -self.FreeAimRange, self.FreeAimRange)
+		freeaim.y = math.Clamp(freeaim.y - x, -self.FreeAimRange, self.FreeAimRange)
+		self:SetFreeAim( freeaim  )
+	end
+end
+
 function SWEP:GetViewModelPosition( pos, ang )
-	return pos + ang:Forward() * 0 + ang:Up() * 0, ang
+	local freeaim = self:GetFreeAim() + self:GetRecoilAngle()
+	freeaim = LerpAngle(self.ViewModelFOV / self.Owner:GetFOV( ),Angle(), freeaim) 
+	local ang = self.Owner:EyeAngles()
+	ang:RotateAroundAxis( ang:Up(), freeaim.y)
+	ang:RotateAroundAxis( ang:Right(), -freeaim.p )
+	return pos, ang
 end
 
 function SWEP:DrawWeaponSelection( x, y, wide, tall, alpha )
@@ -156,6 +178,8 @@ function SWEP:SetupDataTables()
 	self:NetworkVar( "Float", 2, "ChargeTime" )
 	self:NetworkVar( "Float", 3, "RestoreTime" )
 	self:NetworkVar( "Float", 4, "NextUse" )
+	self:NetworkVar( "Angle", 0, "FreeAim" )
+	self:NetworkVar( "Angle", 1, "RecoilAngle" )
 	
 end
 
@@ -173,7 +197,7 @@ end
 
 function SWEP:DealDamage()
 	local vm = self.Owner:GetViewModel()
-	local shootpos = self.Owner:GetShootPos()
+	//local shootpos = self.Owner:GetShootPos()
 	local hitdistance = self.AttackHandle and self.AttackHandle.HitDistance or self.HitDistance
 	local mins = self.AttackHandle and self.AttackHandle.Mins or self.Mins
 	local maxs = self.AttackHandle and self.AttackHandle.Maxs or self.Maxs
@@ -186,8 +210,15 @@ function SWEP:DealDamage()
 	local hitdecal = self.AttackHandle and self.AttackHandle.HitDecal or self.HitDecal
 	local hitcolor = self.AttackHandle and self.AttackHandle.HitColor or self.HitColor
 	local misssound = self.AttackHandle and self.AttackHandle.MissSound or self.MissSound
-	local endpos = shootpos + self.Owner:GetAimVector() * hitdistance
-
+	//local endpos = shootpos + self.Owner:GetAimVector() * hitdistance
+	
+	local freeaim = self:GetFreeAim()
+ 	local ang = self.Owner:EyeAngles()
+ 	//local pos = self.Owner:GetShootPos()
+ 	local shootpos = self.Owner:GetShootPos()
+ 	ang:RotateAroundAxis( ang:Up(), freeaim.y )
+	ang:RotateAroundAxis( ang:Right(), -freeaim.p )
+	local endpos = shootpos + ang:Forward() * hitdistance
 	self.Owner:LagCompensation( true )
 	local tr = util.TraceLine( {
 		start = shootpos,

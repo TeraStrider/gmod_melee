@@ -39,12 +39,14 @@ function SWEP:PrimaryAttack()
 	if ( !IsValid( button ) ) then return end
 	print(button:EntIndex())
 	button:Spawn()
-	
+	--//PrintTable(savetable)
+	local i = 0
 	for k, v in pairs( savetable ) do
-		//if (!istable(v) && k != "hammerid") then
-			print(k)
+		if (k != "m_iEFlags" && v) then
 			button:SetSaveValue(k, v)
-		//end
+		end
+		print(i, k, (v) || (v && 0) || "nil")
+		i = i + 1
 	end
 	undo.Create("created")
 	undo.AddEntity(button)
